@@ -66,6 +66,7 @@ htmlcov/
 
 
 TECHNICAL_PLAN.md
+SPEED_OPTIMIZATION_GUIDE.md
 CHANGELOG.md
 
 agent.config.json
