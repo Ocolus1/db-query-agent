@@ -11,6 +11,7 @@ from db_query_agent.connection_manager import ConnectionManager
 from db_query_agent.query_validator import QueryValidator
 from db_query_agent.agent_integration import AgentIntegration, DatabaseContext
 from db_query_agent.session_manager import SessionManager, ChatSession
+from db_query_agent.conversational_layer import ConversationalLayer
 from db_query_agent.exceptions import DatabaseQueryAgentError
 
 logger = logging.getLogger(__name__)
@@ -179,6 +180,9 @@ class DatabaseQueryAgent:
         self.session_manager = SessionManager(
             backend=self.config.cache.backend
         )
+        
+        # Conversational layer
+        self.conversational_layer = ConversationalLayer()
     
     def _warmup(self) -> None:
         """Warm up cache and connections."""
@@ -200,7 +204,8 @@ class DatabaseQueryAgent:
         question: str,
         return_sql: bool = True,
         return_results: bool = True,
-        return_natural_response: bool = True
+        return_natural_response: bool = True,
+        session: Optional[Any] = None
     ) -> Dict[str, Any]:
         """
         Query database using natural language.
@@ -218,6 +223,17 @@ class DatabaseQueryAgent:
         logger.info(f"Processing query: {question}")
         
         try:
+            # Check if it's casual conversation first
+            casual_response = self.conversational_layer.handle_casual_conversation(question)
+            if casual_response:
+                logger.info("Handling as casual conversation")
+                return {
+                    "question": question,
+                    "natural_response": casual_response,
+                    "is_casual": True,
+                    "execution_time": time.time() - start_time
+                }
+            
             # Check cache
             if self.config.cache.enabled:
                 schema_hash = str(hash(str(self.schema_extractor.get_schema())))
@@ -226,10 +242,11 @@ class DatabaseQueryAgent:
                     logger.info("Returning cached response")
                     return cached
             
-            # Generate SQL
+            # Generate SQL with optional session for memory
             response = await self.agent_integration.generate_sql(
                 question,
-                max_tables=self.config.max_tables_in_context
+                max_tables=self.config.max_tables_in_context,
+                session=session
             )
             
             result = {
@@ -252,10 +269,10 @@ class DatabaseQueryAgent:
                     result["results"] = results
                     result["row_count"] = len(results)
                     
-                    # Generate natural response
+                    # Generate natural response using conversational layer
                     if return_natural_response:
-                        result["natural_response"] = self._format_natural_response(
-                            question, results
+                        result["natural_response"] = self.conversational_layer.generate_natural_response(
+                            question, result
                         )
                 except Exception as e:
                     logger.error(f"Query execution failed: {e}")
@@ -306,29 +323,7 @@ class DatabaseQueryAgent:
             ChatSession instance
         """
         session = self.session_manager.create_session(session_id)
-        return ChatSession(session_id, self.agent_integration, session)
-    
-    def _format_natural_response(
-        self,
-        question: str,
-        results: list
-    ) -> str:
-        """Format query results as natural language."""
-        if not results:
-            return "No results found."
-        
-        row_count = len(results)
-        
-        # Simple formatting based on result count
-        if row_count == 1 and len(results[0]) == 1:
-            # Single value result
-            return f"The answer is: {results[0][0]}"
-        elif row_count == 1:
-            # Single row
-            return f"Found 1 result: {results[0]}"
-        else:
-            # Multiple rows
-            return f"Found {row_count} results. First few: {results[:3]}"
+        return ChatSession(session_id, self, session)
     
     def get_schema(self) -> Dict[str, Any]:
         """Get database schema."""

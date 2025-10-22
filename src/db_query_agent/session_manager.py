@@ -116,7 +116,7 @@ class ChatSession:
     def __init__(
         self,
         session_id: str,
-        agent_integration: Any,  # AgentIntegration instance
+        agent: Any,  # DatabaseQueryAgent instance
         session: SessionABC
     ):
         """
@@ -124,16 +124,16 @@ class ChatSession:
         
         Args:
             session_id: Session identifier
-            agent_integration: AgentIntegration instance
+            agent: DatabaseQueryAgent instance (full agent, not just integration)
             session: Session backend
         """
         self.session_id = session_id
-        self.agent_integration = agent_integration
+        self.agent = agent
         self.session = session
     
     async def ask(self, question: str) -> Dict[str, Any]:
         """
-        Ask a question in the session context.
+        Ask a question in the session context with memory.
         
         Args:
             question: User's question
@@ -143,18 +143,12 @@ class ChatSession:
         """
         logger.info(f"Session {self.session_id} - Question: {question}")
         
-        # Generate SQL with session context
-        response = await self.agent_integration.generate_sql(question)
+        # Use the main agent's query method with session for memory
+        result = await self.agent.query(question, session=self.session)
         
-        # Store in session (handled automatically by OpenAI Agents SDK)
+        # Session history is handled automatically by OpenAI Agents SDK
         
-        return {
-            "sql": response.sql,
-            "explanation": response.explanation,
-            "confidence": response.confidence,
-            "needs_clarification": response.needs_clarification,
-            "clarification_question": response.clarification_question
-        }
+        return result
     
     async def clear(self) -> None:
         """Clear session history."""

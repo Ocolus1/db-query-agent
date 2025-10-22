@@ -233,24 +233,26 @@ Generate the SQL query for the user's question.
     
     async def generate_sql(
         self,
-        user_query: str,
-        max_tables: int = 5
+        question: str,
+        max_tables: Optional[int] = None,
+        session: Optional[Any] = None
     ) -> QueryResponse:
         """
         Generate SQL from natural language query.
         
         Args:
-            user_query: User's natural language question
+            question: User's natural language question
             max_tables: Maximum tables to include in context
+            session: Optional session for conversation history
             
         Returns:
             QueryResponse with SQL and metadata
         """
-        logger.info(f"Generating SQL for query: {user_query}")
+        logger.info(f"Generating SQL for query: {question}")
         
         # Get relevant schema
         relevant_tables = self.context.schema_extractor.get_relevant_tables(
-            user_query,
+            question,
             max_tables=max_tables
         )
         schema_context = self.context.schema_extractor.format_for_llm(
@@ -258,16 +260,17 @@ Generate the SQL query for the user's question.
         )
         
         # Select model
-        model_name = self._select_model(user_query)
+        model_name = self._select_model(question)
         
         # Create agent
         agent = self._create_agent(schema_context, model_name)
         
-        # Run agent
+        # Run agent with optional session for memory
         result = await Runner.run(
             agent,
-            input=user_query,
-            context=self.context
+            input=question,
+            context=self.context,
+            session=session  # Pass session for conversation history
         )
         
         return result.final_output
