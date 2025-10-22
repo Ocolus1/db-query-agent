@@ -17,6 +17,16 @@ class DatabaseConfig(BaseModel):
     max_overflow: int = Field(default=20, description="Maximum overflow connections")
     pool_timeout: int = Field(default=30, description="Pool timeout in seconds")
     pool_recycle: int = Field(default=3600, description="Connection recycle time in seconds")
+    
+    # SSL Configuration
+    ssl_enabled: Optional[bool] = Field(default=None, description="Enable SSL (auto-detected from URL if None)")
+    ssl_cert: Optional[str] = Field(default=None, description="Path to SSL certificate file")
+    ssl_key: Optional[str] = Field(default=None, description="Path to SSL key file")
+    ssl_ca: Optional[str] = Field(default=None, description="Path to SSL CA certificate")
+    ssl_verify: bool = Field(default=True, description="Verify SSL certificates")
+    
+    # Additional connection arguments
+    connect_args: Optional[dict] = Field(default=None, description="Additional connection arguments")
 
 
 class CacheConfig(BaseModel):
