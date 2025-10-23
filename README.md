@@ -347,8 +347,8 @@ With all optimizations enabled:
 - [Technical Plan](./TECHNICAL_PLAN.md) - Project roadmap and implementation details
 - [Speed Optimization Guide](./SPEED_OPTIMIZATION_GUIDE.md) - Performance tuning strategies
 - [Changelog](./CHANGELOG.md) - Version history and updates
-- [Phase 4 Summary](./PHASE4_SUMMARY.md) - Latest features (streaming, statistics, configuration)
-- [Phase 7 Completion](./PHASE7_COMPLETION.md) - Documentation completion report
+- [Packaging Guide](./PACKAGING.md) - How to build and release the package
+- [Release Checklist](./RELEASE_CHECKLIST.md) - Pre-release verification checklist
 
 ## 🧪 Development
 
