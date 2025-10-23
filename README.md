@@ -332,10 +332,23 @@ With all optimizations enabled:
 
 ## 📚 Documentation
 
-- **[Usage Examples](./USAGE_EXAMPLES.md)** - 20+ examples covering all features
-- [Technical Plan](./TECHNICAL_PLAN.md) - Complete architecture and design
+### Core Documentation
+- **[API Reference](./docs/API_REFERENCE.md)** - Complete API documentation for all classes and methods
+- **[Integration Guides](./docs/INTEGRATION_GUIDES.md)** - Django, Flask, FastAPI, Streamlit, Jupyter integrations
+- **[Troubleshooting Guide](./docs/TROUBLESHOOTING.md)** - Common issues and solutions
+- **[Architecture](./docs/ARCHITECTURE.md)** - System design and architecture decisions
+
+### Examples
+- **[Basic Examples](./examples/basic_usage.py)** - 7 basic usage examples
+- **[Advanced Examples](./examples/advanced_usage.py)** - 8 advanced patterns and optimizations
+- **[Examples Guide](./examples/README.md)** - Overview of all examples
+
+### Additional Resources
+- [Technical Plan](./TECHNICAL_PLAN.md) - Project roadmap and implementation details
 - [Speed Optimization Guide](./SPEED_OPTIMIZATION_GUIDE.md) - Performance tuning strategies
-- [Changelog](./CHANGELOG.md) - Version history
+- [Changelog](./CHANGELOG.md) - Version history and updates
+- [Phase 4 Summary](./PHASE4_SUMMARY.md) - Latest features (streaming, statistics, configuration)
+- [Phase 7 Completion](./PHASE7_COMPLETION.md) - Documentation completion report
 
 ## 🧪 Development
 
@@ -353,30 +366,50 @@ pip install -e ".[dev]"
 pytest
 
 # Run demo UI
-streamlit run examples/streamlit_demo.py
+streamlit run demo/streamlit_app.py
+```
+
+### Learn More
+
+- **New to the package?** Start with [Basic Examples](./examples/basic_usage.py)
+- **Integrating with a framework?** Check [Integration Guides](./docs/INTEGRATION_GUIDES.md)
+- **Need help?** See [Troubleshooting Guide](./docs/TROUBLESHOOTING.md)
+- **Want to understand the internals?** Read [Architecture](./docs/ARCHITECTURE.md)
 ```
 
 ### Project Structure
 
 ```
 db-query-agent/
-├── src/
-│   └── db_query_agent/
-│       ├── __init__.py
-│       ├── agent.py                 # Main agent class
-│       ├── schema_extractor.py      # Schema introspection
-│       ├── cache_manager.py         # Multi-layer caching
-│       ├── connection_manager.py    # DB connection pooling
-│       ├── query_validator.py       # SQL validation
-│       ├── config.py                # Configuration
-│       └── exceptions.py            # Custom exceptions
+├── src/db_query_agent/
+│   ├── __init__.py
+│   ├── agent.py                    # Main agent class
+│   ├── simple_multi_agent_system.py # Multi-agent orchestration
+│   ├── schema_extractor.py         # Schema introspection
+│   ├── cache_manager.py            # Multi-layer caching
+│   ├── connection_manager.py       # DB connection pooling
+│   ├── query_validator.py          # SQL validation
+│   ├── session_manager.py          # Session management
+│   ├── config.py                   # Configuration classes
+│   └── exceptions.py               # Custom exceptions
+├── docs/
+│   ├── API_REFERENCE.md            # Complete API documentation
+│   ├── INTEGRATION_GUIDES.md       # Framework integration guides
+│   ├── TROUBLESHOOTING.md          # Common issues & solutions
+│   └── ARCHITECTURE.md             # System architecture
 ├── examples/
-│   ├── streamlit_demo.py           # Demo UI
-│   ├── django_integration.py       # Django example
-│   ├── fastapi_integration.py      # FastAPI example
-│   └── flask_integration.py        # Flask example
-├── tests/
-└── docs/
+│   ├── basic_usage.py              # 7 basic examples
+│   ├── advanced_usage.py           # 8 advanced examples
+│   └── README.md                   # Examples documentation
+├── demo/
+│   ├── streamlit_app.py            # Interactive demo UI
+│   └── create_demo_db.py           # Demo database setup
+├── tests/                          # 133 tests (all passing)
+│   ├── test_dynamic_configuration.py
+│   ├── test_streaming.py
+│   ├── test_utility_methods.py
+│   └── test_phase4_integration.py
+└── pyproject.toml                  # Package configuration
 ```
 
 ## 🤝 Contributing
