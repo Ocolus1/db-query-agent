@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [0.1.2] - 2025-10-23
+
+### 🔧 Critical Bug Fix
+
+### Fixed
+- **Package structure issue** - Fixed missing subpackages in PyPI distribution
+  - Changed from explicit `packages` list to `setuptools.packages.find`
+  - Now correctly includes `db_query_agent.agents` and `db_query_agent.tools` subpackages
+  - Resolves `ModuleNotFoundError: No module named 'db_query_agent.agents'`
+- **Documentation updates** - Updated GitHub repository links from placeholder to actual repo
+
+---
+
 ## [0.1.1] - 2025-10-23
 
 ### 🔧 Bug Fix Release

@@ -1,6 +1,6 @@
 [project]
 name = "db-query-agent"
-version = "0.1.1"
+version = "0.1.2"
 description = "AI-powered natural language database query system using OpenAI Agents SDK"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -66,8 +66,11 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["db_query_agent"]
 package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["db_query_agent*"]
 
 [tool.black]
 line-length = 100

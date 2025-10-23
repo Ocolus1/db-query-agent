@@ -220,7 +220,7 @@ Visit: https://pypi.org/project/db-query-agent/
 
 ### 5.1 Go to GitHub Releases
 
-Navigate to: `https://github.com/yourusername/db-query-agent/releases/new`
+Navigate to: `https://github.com/Ocolus1/db-query-agent/releases/new`
 
 ### 5.2 Fill Release Form
 

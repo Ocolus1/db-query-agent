@@ -358,7 +358,7 @@ With all optimizations enabled:
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/db-query-agent
+git clone https://github.com/Ocolus1/db-query-agent
 cd db-query-agent
 
 # Install dependencies
@@ -430,9 +430,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📧 Support
 
-- 📖 [Documentation](https://github.com/yourusername/db-query-agent#readme)
-- 🐛 [Issue Tracker](https://github.com/yourusername/db-query-agent/issues)
-- 💬 [Discussions](https://github.com/yourusername/db-query-agent/discussions)
+- 📖 [Documentation](https://github.com/Ocolus1/db-query-agent#readme)
+- 🐛 [Issue Tracker](https://github.com/Ocolus1/db-query-agent/issues)
+- 💬 [Discussions](https://github.com/Ocolus1/db-query-agent/discussions)
 
 ---
 
