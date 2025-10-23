@@ -2,6 +2,39 @@
 
 All notable changes to this project will be documented in this file.
 
+---
+
+## [0.1.0] - 2025-10-23
+
+### 🎉 Initial Public Release
+
+**Package now available on PyPI:** `pip install db-query-agent`
+
+### Added
+- Natural language database querying with OpenAI Agents SDK
+- Multi-agent system (Conversational + SQL agents)
+- Streaming response support
+- Session management for multi-turn conversations
+- Multi-level caching (schema, LLM, query results)
+- Dynamic configuration system (env vars, direct params, .env files)
+- Statistics tracking
+- Safety features (read-only mode, SQL injection prevention, query validation)
+- Support for PostgreSQL, MySQL, SQLite, SQL Server
+- Complete API documentation
+- Integration guides for Django, Flask, FastAPI, Streamlit, Jupyter
+- 15 usage examples (7 basic + 8 advanced)
+- 133 passing tests
+- GitHub Actions CI/CD workflows
+
+### Documentation
+- Complete API reference
+- Framework integration guides
+- Troubleshooting guide
+- Architecture documentation
+- Packaging and release guides
+
+---
+
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 

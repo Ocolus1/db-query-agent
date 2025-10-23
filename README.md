@@ -2,8 +2,10 @@
 
 > **AI-powered natural language database query system using OpenAI Agents SDK**
 
+[![PyPI version](https://badge.fury.io/py/db-query-agent.svg)](https://badge.fury.io/py/db-query-agent)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Downloads](https://pepy.tech/badge/db-query-agent)](https://pepy.tech/project/db-query-agent)
 
 A powerful, production-ready Python package that lets you query databases using natural language. Built with OpenAI Agents SDK, featuring intelligent safety guardrails, streaming responses, and optimized for speed.
 
