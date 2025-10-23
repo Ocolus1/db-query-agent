@@ -146,6 +146,8 @@ def init_session_state():
         st.session_state.chat_messages = []
     if 'use_session' not in st.session_state:
         st.session_state.use_session = False
+    if 'use_streaming' not in st.session_state:
+        st.session_state.use_streaming = False
 
 
 def connect_to_database(**kwargs) -> bool:
@@ -216,6 +218,7 @@ def sidebar_config():
         with st.expander("Advanced Options"):
             read_only = st.checkbox("Read-Only Mode", value=True, help="Only allow SELECT queries")
             enable_cache = st.checkbox("Enable Caching", value=True)
+            enable_streaming = st.checkbox("Enable Streaming", value=False, help="Stream responses token-by-token for better UX")
             model_strategy = st.selectbox(
                 "Model Strategy",
                 ["adaptive", "fixed"],
@@ -231,6 +234,7 @@ def sidebar_config():
                     success = connect_to_database(
                         read_only=read_only,
                         enable_cache=enable_cache,
+                        enable_streaming=enable_streaming,
                         model_strategy=model_strategy
                     )
                     if success:
@@ -381,10 +385,13 @@ def render_query_interface():
     
     st.markdown("### 💬 Chat with Your Database")
     
-    # Session toggle
-    col1, col2 = st.columns([5, 1])
+    # Session and Streaming toggles
+    col1, col2, col3 = st.columns([4, 1, 1])
     with col2:
         st.session_state.use_session = st.checkbox("💬 Session", value=st.session_state.use_session, help="Maintain conversation context")
+    with col3:
+        # Streaming toggle - always visible, controls whether to use streaming
+        st.session_state.use_streaming = st.checkbox("⚡ Stream", value=st.session_state.use_streaming, help="Stream responses token-by-token")
     
     # Chat messages container
     chat_container = st.container()
@@ -419,39 +426,66 @@ def render_query_interface():
         })
         
         # Execute query - agent handles casual conversation automatically
-        with st.spinner("🤔 Thinking..."):
-            try:
-                # Agent automatically detects casual conversation vs database query
-                if st.session_state.use_session:
-                    if not st.session_state.current_session:
-                        st.session_state.current_session = st.session_state.agent.create_session(
-                            f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-                        )
-                    result = asyncio.run(st.session_state.current_session.ask(query))
-                else:
-                    result = asyncio.run(st.session_state.agent.query(query))
+        try:
+            # Determine session
+            session_obj = None
+            if st.session_state.use_session:
+                if not st.session_state.current_session:
+                    st.session_state.current_session = st.session_state.agent.create_session(
+                        f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                    )
+                session_obj = st.session_state.current_session.session
+            
+            # Use streaming if user toggled it on
+            if st.session_state.use_streaming:
+                # Create placeholder for streaming response
+                response_placeholder = st.empty()
+                streamed_text = ""
                 
-                # Add AI response
-                st.session_state.chat_messages.append({
-                    'type': 'ai',
-                    'result': result,
-                    'timestamp': datetime.now()
+                # Stream the response
+                async def stream_response():
+                    nonlocal streamed_text
+                    async for chunk in st.session_state.agent.query_stream(query, session=session_obj):
+                        streamed_text += chunk
+                        # Update placeholder with accumulated text
+                        response_placeholder.markdown(f"💬 {streamed_text}")
+                    return streamed_text
+                
+                # Run streaming
+                final_response = asyncio.run(stream_response())
+                response_placeholder.empty()  # Clear placeholder
+                
+                # Create result dict
+                result = {
+                    "natural_response": final_response,
+                    "final_output": final_response
+                }
+            else:
+                # Non-streaming query
+                with st.spinner("🤔 Thinking..."):
+                    result = asyncio.run(st.session_state.agent.query(query, session=session_obj))
+            
+            # Add AI response
+            st.session_state.chat_messages.append({
+                'type': 'ai',
+                'result': result,
+                'timestamp': datetime.now()
+            })
+            
+            # Store in history (only if not casual)
+            if not result.get('is_casual', False):
+                st.session_state.query_history.insert(0, {
+                    'timestamp': datetime.now(),
+                    'question': query,
+                    'result': result
                 })
                 
-                # Store in history (only if not casual)
-                if not result.get('is_casual', False):
-                    st.session_state.query_history.insert(0, {
-                        'timestamp': datetime.now(),
-                        'question': query,
-                        'result': result
-                    })
-                
-                # Rerun to show new messages
-                st.rerun()
-                
-            except Exception as e:
-                st.error(f"❌ Error: {str(e)}")
-                logger.error(f"Query error: {e}", exc_info=True)
+            # Rerun to show new messages
+            st.rerun()
+            
+        except Exception as e:
+            st.error(f"❌ Error: {str(e)}")
+            logger.error(f"Query error: {e}", exc_info=True)
     
     # Clear chat button
     if len(st.session_state.chat_messages) > 0:

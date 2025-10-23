@@ -180,6 +180,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Reduces perceived wait time - users see responses as they're generated
   - Fully integrated with caching (cached responses returned instantly)
   - Works with sessions for conversational context
+  - **Configurable via parameter, .env, or UI checkbox**
+  - `enable_streaming` parameter (default: False - opt-in feature)
+  - Load from .env: `ENABLE_STREAMING=true`
+  - Streamlit UI: "⚡ Stream" checkbox in query interface
   - Example: `async for chunk in agent.query_stream("question"): print(chunk, end="")`
 
 ### Fixed

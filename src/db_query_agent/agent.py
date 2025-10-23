@@ -74,10 +74,11 @@ class DatabaseQueryAgent:
         # Performance configuration
         lazy_schema_loading: Optional[bool] = None,
         max_tables_in_context: Optional[int] = None,
-        enable_streaming: Optional[bool] = None,
         warmup_on_init: Optional[bool] = None,
         # Statistics configuration
         enable_statistics: bool = True,
+        # Streaming configuration
+        enable_streaming: Optional[bool] = None,
         # Session configuration
         session_backend: Optional[str] = None,
         session_db_path: Optional[str] = None,
@@ -109,9 +110,9 @@ class DatabaseQueryAgent:
             max_overflow: Max overflow connections (from .env: DB_MAX_OVERFLOW)
             lazy_schema_loading: Load only relevant tables (from .env: LAZY_SCHEMA_LOADING)
             max_tables_in_context: Max tables in context (from .env: MAX_TABLES_IN_CONTEXT)
-            enable_streaming: Enable streaming (from .env: ENABLE_STREAMING)
             warmup_on_init: Warm up cache (from .env: WARMUP_ON_INIT)
             enable_statistics: Track query statistics
+            enable_streaming: Enable streaming responses (from .env: ENABLE_STREAMING)
             session_backend: Session backend ('sqlite' or 'memory')
             session_db_path: Path to session database file
         """
@@ -187,6 +188,9 @@ class DatabaseQueryAgent:
             "failed_queries": 0,
             "cache_hits": 0,
         } if enable_statistics else None
+        
+        # Streaming configuration
+        self.enable_streaming = get_config_value(enable_streaming, "ENABLE_STREAMING", False, bool)
         
         # Session configuration
         self.session_backend = session_backend or "sqlite"
