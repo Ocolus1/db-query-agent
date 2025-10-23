@@ -1,6 +1,6 @@
 [project]
 name = "db-query-agent"
-version = "0.1.0"
+version = "0.1.1"
 description = "AI-powered natural language database query system using OpenAI Agents SDK"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -28,11 +28,6 @@ dependencies = [
     "pydantic>=2.0.0",
     "python-dotenv>=1.0.0",
     "aiosqlite>=0.19.0",
-    "pytest>=8.4.2",
-    "pytest-asyncio>=1.2.0",
-    "psycopg2>=2.9.11",
-    "build>=1.3.0",
-    "twine>=6.2.0",
 ]
 
 [project.optional-dependencies]
@@ -51,13 +46,13 @@ all = [
 ]
 dev = [
     "streamlit>=1.30.0",
-    "pytest>=7.0.0",
-    "pytest-asyncio>=0.21.0",
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.2.0",
     "black>=23.0.0",
     "ruff>=0.1.0",
     "mypy>=1.0.0",
-    "build>=1.0.0",
-    "twine>=4.0.0",
+    "build>=1.3.0",
+    "twine>=6.2.0",
 ]
 
 [project.urls]

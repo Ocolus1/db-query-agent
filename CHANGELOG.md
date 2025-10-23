@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [0.1.1] - 2025-10-23
+
+### 🔧 Bug Fix Release
+
+### Fixed
+- **Dependency conflict resolution** - Removed development dependencies from main dependencies
+  - Moved `pytest`, `pytest-asyncio`, `build`, and `twine` to optional `dev` dependencies
+  - Fixed conflict with Streamlit's packaging requirements (`packaging` version conflict)
+  - Main dependencies now only include runtime requirements (6 packages instead of 12)
+  - Users can now install alongside Streamlit without conflicts
+
+---
+
 ## [0.1.0] - 2025-10-23
 
 ### 🎉 Initial Public Release
