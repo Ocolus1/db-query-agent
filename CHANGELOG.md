@@ -14,6 +14,10 @@ All notable changes to this project will be documented in this file.
   - Now correctly includes `db_query_agent.agents` and `db_query_agent.tools` subpackages
   - Resolves `ModuleNotFoundError: No module named 'db_query_agent.agents'`
 - **Documentation updates** - Updated GitHub repository links from placeholder to actual repo
+- **README improvements** - Cleaned up PyPI documentation
+  - Removed internal development resources (Technical Plan, Packaging Guide, etc.)
+  - Fixed Project Structure formatting for better readability
+  - Enhanced Contributing section with clear guidelines
 
 ---
 

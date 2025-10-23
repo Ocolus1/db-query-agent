@@ -345,13 +345,6 @@ With all optimizations enabled:
 - **[Advanced Examples](./examples/advanced_usage.py)** - 8 advanced patterns and optimizations
 - **[Examples Guide](./examples/README.md)** - Overview of all examples
 
-### Additional Resources
-- [Technical Plan](./TECHNICAL_PLAN.md) - Project roadmap and implementation details
-- [Speed Optimization Guide](./SPEED_OPTIMIZATION_GUIDE.md) - Performance tuning strategies
-- [Changelog](./CHANGELOG.md) - Version history and updates
-- [Packaging Guide](./PACKAGING.md) - How to build and release the package
-- [Release Checklist](./RELEASE_CHECKLIST.md) - Pre-release verification checklist
-
 ## 🧪 Development
 
 ### Setup
@@ -377,46 +370,61 @@ streamlit run demo/streamlit_app.py
 - **Integrating with a framework?** Check [Integration Guides](./docs/INTEGRATION_GUIDES.md)
 - **Need help?** See [Troubleshooting Guide](./docs/TROUBLESHOOTING.md)
 - **Want to understand the internals?** Read [Architecture](./docs/ARCHITECTURE.md)
-```
 
-### Project Structure
+## 📁 Project Structure
 
 ```
 db-query-agent/
-├── src/db_query_agent/
+├── src/db_query_agent/          # Main package source code
 │   ├── __init__.py
-│   ├── agent.py                    # Main agent class
-│   ├── simple_multi_agent_system.py # Multi-agent orchestration
-│   ├── schema_extractor.py         # Schema introspection
-│   ├── cache_manager.py            # Multi-layer caching
-│   ├── connection_manager.py       # DB connection pooling
-│   ├── query_validator.py          # SQL validation
-│   ├── session_manager.py          # Session management
-│   ├── config.py                   # Configuration classes
-│   └── exceptions.py               # Custom exceptions
-├── docs/
-│   ├── API_REFERENCE.md            # Complete API documentation
-│   ├── INTEGRATION_GUIDES.md       # Framework integration guides
-│   ├── TROUBLESHOOTING.md          # Common issues & solutions
-│   └── ARCHITECTURE.md             # System architecture
-├── examples/
-│   ├── basic_usage.py              # 7 basic examples
-│   ├── advanced_usage.py           # 8 advanced examples
-│   └── README.md                   # Examples documentation
-├── demo/
-│   ├── streamlit_app.py            # Interactive demo UI
-│   └── create_demo_db.py           # Demo database setup
-├── tests/                          # 133 tests (all passing)
+│   ├── agent.py                 # DatabaseQueryAgent - main interface
+│   ├── simple_multi_agent_system.py  # Multi-agent orchestration
+│   ├── agents/                  # Agent implementations
+│   ├── tools/                   # Agent tools
+│   ├── schema_extractor.py      # Database schema introspection
+│   ├── cache_manager.py         # Multi-layer caching system
+│   ├── connection_manager.py    # Database connection pooling
+│   ├── query_validator.py       # SQL validation and safety
+│   ├── session_manager.py       # Conversation session management
+│   ├── config.py                # Configuration classes
+│   └── exceptions.py            # Custom exceptions
+│
+├── docs/                        # Documentation
+│   ├── API_REFERENCE.md         # Complete API documentation
+│   ├── INTEGRATION_GUIDES.md    # Framework integration guides
+│   ├── TROUBLESHOOTING.md       # Common issues & solutions
+│   └── ARCHITECTURE.md          # System architecture
+│
+├── examples/                    # Usage examples
+│   ├── basic_usage.py           # 7 basic examples
+│   ├── advanced_usage.py        # 8 advanced examples
+│   └── README.md                # Examples documentation
+│
+├── demo/                        # Demo application
+│   ├── streamlit_app.py         # Interactive demo UI
+│   └── create_demo_db.py        # Demo database setup
+│
+├── tests/                       # Test suite (133 tests)
+│   ├── test_agent_integration.py
+│   ├── test_cache_manager.py
 │   ├── test_dynamic_configuration.py
 │   ├── test_streaming.py
-│   ├── test_utility_methods.py
-│   └── test_phase4_integration.py
-└── pyproject.toml                  # Package configuration
+│   └── ...
+│
+└── pyproject.toml               # Package configuration
 ```
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Here's how you can help:
+
+1. **Report bugs** - Open an issue with details about the problem
+2. **Suggest features** - Share your ideas for improvements
+3. **Submit PRs** - Fix bugs or add features
+4. **Improve docs** - Help make the documentation better
+5. **Share feedback** - Let us know how you're using the package
+
+Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
 
 ## 📄 License
 
