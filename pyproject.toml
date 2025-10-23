@@ -61,10 +61,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/0colus1/db-query-agent"
-Documentation = "https://github.com/0colus1/db-query-agent#readme"
-Repository = "https://github.com/0colus1/db-query-agent"
-Issues = "https://github.com/0colus1/db-query-agent/issues"
+Homepage = "https://github.com/Ocolus1/db-query-agent"
+Documentation = "https://github.com/Ocolus1/db-query-agent#readme"
+Repository = "https://github.com/Ocolus1/db-query-agent"
+Issues = "https://github.com/Ocolus1/db-query-agent/issues"
 
 [build-system]
 requires = ["setuptools>=68.0", "wheel"]
