@@ -32,17 +32,49 @@ pip install db-query-agent[all]       # All drivers
 
 ### Basic Usage
 
+**Option 1: Load from .env (Recommended)**
+
+```bash
+# Create .env file
+DATABASE_URL=postgresql://user:pass@localhost/mydb
+OPENAI_API_KEY=sk-...
+FAST_MODEL=gpt-4o-mini
+READ_ONLY=true
+```
+
 ```python
 from db_query_agent import DatabaseQueryAgent
 
-# Initialize
+# Load everything from .env
+agent = DatabaseQueryAgent.from_env()
+
+# Or override specific values
+agent = DatabaseQueryAgent.from_env(
+    fast_model="gpt-4.1",
+    enable_statistics=True
+)
+```
+
+**Option 2: Direct Configuration**
+
+```python
+from db_query_agent import DatabaseQueryAgent
+
+# Pass all parameters directly
 agent = DatabaseQueryAgent(
     database_url="postgresql://user:pass@localhost/mydb",
-    openai_api_key="sk-..."
+    openai_api_key="sk-...",
+    fast_model="gpt-4o-mini",
+    read_only=True,
+    enable_cache=True
 )
+```
 
-# Query in natural language
-result = agent.query("How many users signed up last month?")
+### Query the Database
+
+```python
+# Query in natural language (async)
+result = await agent.query("How many users signed up last month?")
 
 print(result["natural_response"])
 # Output: "245 users signed up last month"
@@ -66,13 +98,55 @@ async for chunk in agent.query_stream("Show me top 10 customers by revenue"):
 session = agent.create_session(session_id="user_123")
 
 # First query
-response1 = session.ask("Show me all products")
+response1 = await session.ask("Show me all products")
 
 # Follow-up query (maintains context)
-response2 = session.ask("Filter those by category=electronics")
+response2 = await session.ask("Filter those by category=electronics")
 
 # Another follow-up
-response3 = session.ask("Sort by price descending")
+response3 = await session.ask("Sort by price descending")
+```
+
+## 🔧 Utility Methods
+
+### Session Management
+
+```python
+# List all active sessions
+sessions = agent.list_sessions()
+
+# Get conversation history
+history = agent.get_session_history("user_123")
+
+# Clear session history
+agent.clear_session("user_123")
+
+# Delete session
+agent.delete_session("user_123")
+```
+
+### Schema Exploration
+
+```python
+# Get basic schema
+schema = agent.get_schema()
+
+# Get detailed schema with relationships
+schema_info = agent.get_schema_info(include_foreign_keys=True)
+print(f"Total tables: {schema_info['total_tables']}")
+print(f"Relationships: {len(schema_info['relationships'])}")
+```
+
+### Statistics and Monitoring
+
+```python
+# Get comprehensive statistics
+stats = agent.get_stats()
+
+print(f"Total queries: {stats['total_queries']}")
+print(f"Cache hit rate: {stats['cache_hits'] / stats['total_queries'] * 100:.1f}%")
+print(f"Active connections: {stats['pool']['checked_out']}")
+print(f"Total sessions: {stats['sessions']['total_sessions']}")
 ```
 
 ## 🎯 Framework Integration
@@ -127,24 +201,51 @@ def query():
 
 ## ⚙️ Configuration
 
-### Environment Variables
+### Environment Variables (Recommended)
 
-Create a `.env` file:
+Create a `.env` file with all configuration:
 
 ```bash
 # Required
 OPENAI_API_KEY=sk-your-api-key
 DATABASE_URL=postgresql://user:pass@localhost/db
 
-# Optional
-CACHE_BACKEND=memory  # memory, sqlite, redis
+# Model Configuration
+MODEL_STRATEGY=adaptive
 FAST_MODEL=gpt-4o-mini
 BALANCED_MODEL=gpt-4.1-mini
+COMPLEX_MODEL=gpt-4.1
+
+# Cache Configuration
+CACHE_ENABLED=true
+CACHE_BACKEND=memory
+CACHE_SCHEMA_TTL=3600
+CACHE_QUERY_TTL=300
+CACHE_LLM_TTL=3600
+
+# Safety Configuration
 READ_ONLY=true
 QUERY_TIMEOUT=30
+MAX_RESULT_ROWS=10000
+
+# Connection Configuration
+DB_POOL_SIZE=10
+DB_MAX_OVERFLOW=20
+
+# Performance Configuration
+LAZY_SCHEMA_LOADING=true
+ENABLE_STREAMING=true
+WARMUP_ON_INIT=false
 ```
 
-### Advanced Configuration
+Then load with a single line:
+```python
+agent = DatabaseQueryAgent.from_env()
+```
+
+### Direct Configuration
+
+Pass parameters directly (overrides .env):
 
 ```python
 from db_query_agent import DatabaseQueryAgent
@@ -153,26 +254,55 @@ agent = DatabaseQueryAgent(
     database_url="postgresql://...",
     openai_api_key="sk-...",
     
-    # Speed optimizations
+    # Model configuration
     model_strategy="adaptive",  # Use fast model for simple queries
     fast_model="gpt-4o-mini",   # 2s generation time
     balanced_model="gpt-4.1-mini",  # 3s generation time
+    complex_model="gpt-4.1",     # 5s generation time
     
-    # Caching
+    # Cache configuration
     enable_cache=True,
     cache_backend="redis",
     schema_cache_ttl=3600,  # 1 hour
     query_cache_ttl=300,    # 5 minutes
+    llm_cache_ttl=3600,     # 1 hour
     
-    # Safety
+    # Safety configuration
     read_only=True,
     allowed_tables=["users", "orders", "products"],
+    blocked_tables=["sensitive_data"],
     max_query_timeout=30,
+    max_result_rows=10000,
     
-    # Performance
+    # Connection configuration
     pool_size=10,
+    max_overflow=20,
+    
+    # Performance configuration
     lazy_schema_loading=True,
+    max_tables_in_context=5,
     enable_streaming=True,
+    warmup_on_init=False,
+    
+    # Statistics configuration
+    enable_statistics=True,  # Track queries, cache hits, etc.
+    
+    # Session configuration
+    session_backend="sqlite",
+    session_db_path="./sessions.db"
+)
+```
+
+### Mixed Configuration
+
+Load from `.env` and override specific values:
+
+```python
+# Load most settings from .env, override specific ones
+agent = DatabaseQueryAgent.from_env(
+    fast_model="gpt-4.1",  # Override model
+    read_only=False,       # Override safety
+    enable_statistics=True  # Add statistics
 )
 ```
 
@@ -202,6 +332,7 @@ With all optimizations enabled:
 
 ## 📚 Documentation
 
+- **[Usage Examples](./USAGE_EXAMPLES.md)** - 20+ examples covering all features
 - [Technical Plan](./TECHNICAL_PLAN.md) - Complete architecture and design
 - [Speed Optimization Guide](./SPEED_OPTIMIZATION_GUIDE.md) - Performance tuning strategies
 - [Changelog](./CHANGELOG.md) - Version history

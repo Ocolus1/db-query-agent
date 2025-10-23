@@ -148,14 +148,17 @@ def init_session_state():
         st.session_state.use_session = False
 
 
-def connect_to_database(database_url: str, openai_api_key: str, **kwargs) -> bool:
-    """Connect to database and initialize agent."""
+def connect_to_database(**kwargs) -> bool:
+    """Connect to database and initialize agent using flexible configuration.
+    
+    The agent will load credentials from .env by default, with overrides from kwargs.
+    """
     try:
         from db_query_agent import DatabaseQueryAgent
         
-        st.session_state.agent = DatabaseQueryAgent(
-            database_url=database_url,
-            openai_api_key=openai_api_key,
+        # Use from_env() which loads from .env and allows overrides
+        st.session_state.agent = DatabaseQueryAgent.from_env(
+            enable_statistics=True,  # Enable query statistics
             **kwargs
         )
         
@@ -224,9 +227,8 @@ def sidebar_config():
                 st.error("❌ Please set DATABASE_URL and OPENAI_API_KEY in demo/.env file")
             else:
                 with st.spinner("Connecting..."):
+                    # Pass overrides to from_env() - credentials loaded from .env automatically
                     success = connect_to_database(
-                        database_url=database_url,
-                        openai_api_key=openai_api_key,
                         read_only=read_only,
                         enable_cache=enable_cache,
                         model_strategy=model_strategy

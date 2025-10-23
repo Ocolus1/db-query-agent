@@ -9,6 +9,11 @@ import os
 load_dotenv()
 
 
+def get_env(key: str, default: Optional[str] = None) -> Optional[str]:
+    """Get environment variable with optional default."""
+    return os.getenv(key, default)
+
+
 class DatabaseConfig(BaseModel):
     """Database configuration."""
     
@@ -78,30 +83,71 @@ class AgentConfig(BaseModel):
     warmup_on_init: bool = Field(default=False, description="Warm up cache on initialization")
     
     @classmethod
-    def from_env(cls, database_url: Optional[str] = None) -> "AgentConfig":
-        """Create configuration from environment variables."""
+    def from_env(
+        cls,
+        database_url: Optional[str] = None,
+        openai_api_key: Optional[str] = None,
+        **overrides
+    ) -> "AgentConfig":
+        """Create configuration from environment variables with optional overrides.
         
-        openai_api_key = os.getenv("OPENAI_API_KEY")
-        if not openai_api_key:
-            raise ValueError("OPENAI_API_KEY environment variable is required")
+        Args:
+            database_url: Database URL (overrides env)
+            openai_api_key: OpenAI API key (overrides env)
+            **overrides: Any other config parameters to override
         
-        db_url = database_url or os.getenv("DATABASE_URL")
+        Returns:
+            AgentConfig instance
+        """
+        # Get credentials (parameter > env > error)
+        api_key = openai_api_key or get_env("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "OPENAI_API_KEY must be provided as parameter or environment variable"
+            )
+        
+        db_url = database_url or get_env("DATABASE_URL")
         if not db_url:
-            raise ValueError("DATABASE_URL must be provided or set in environment")
+            raise ValueError(
+                "DATABASE_URL must be provided as parameter or environment variable"
+            )
         
-        return cls(
-            openai_api_key=openai_api_key,
-            database=DatabaseConfig(url=db_url),
-            cache=CacheConfig(
-                backend=os.getenv("CACHE_BACKEND", "memory"),
-                redis_url=os.getenv("REDIS_URL"),
+        # Build config from env with overrides
+        config_dict = {
+            "openai_api_key": api_key,
+            "database": DatabaseConfig(
+                url=db_url,
+                pool_size=int(get_env("DB_POOL_SIZE", "10")),
+                max_overflow=int(get_env("DB_MAX_OVERFLOW", "20")),
             ),
-            model=ModelConfig(
-                fast_model=os.getenv("FAST_MODEL", "gpt-4o-mini"),
-                balanced_model=os.getenv("BALANCED_MODEL", "gpt-4.1-mini"),
+            "cache": CacheConfig(
+                enabled=get_env("CACHE_ENABLED", "true").lower() == "true",
+                backend=get_env("CACHE_BACKEND", "memory"),
+                redis_url=get_env("REDIS_URL"),
+                schema_ttl=int(get_env("CACHE_SCHEMA_TTL", "3600")),
+                query_ttl=int(get_env("CACHE_QUERY_TTL", "300")),
+                llm_ttl=int(get_env("CACHE_LLM_TTL", "3600")),
             ),
-            safety=SafetyConfig(
-                read_only=os.getenv("READ_ONLY", "true").lower() == "true",
-                max_query_timeout=int(os.getenv("QUERY_TIMEOUT", "30")),
+            "model": ModelConfig(
+                strategy=get_env("MODEL_STRATEGY", "adaptive"),
+                fast_model=get_env("FAST_MODEL", "gpt-4o-mini"),
+                balanced_model=get_env("BALANCED_MODEL", "gpt-4.1-mini"),
+                complex_model=get_env("COMPLEX_MODEL", "gpt-4.1"),
+                temperature=float(get_env("MODEL_TEMPERATURE", "0.0")),
+                max_tokens=int(get_env("MODEL_MAX_TOKENS", "1000")),
             ),
-        )
+            "safety": SafetyConfig(
+                read_only=get_env("READ_ONLY", "true").lower() == "true",
+                max_query_timeout=int(get_env("QUERY_TIMEOUT", "30")),
+                max_result_rows=int(get_env("MAX_RESULT_ROWS", "10000")),
+            ),
+            "enable_streaming": get_env("ENABLE_STREAMING", "true").lower() == "true",
+            "lazy_schema_loading": get_env("LAZY_SCHEMA_LOADING", "true").lower() == "true",
+            "max_tables_in_context": int(get_env("MAX_TABLES_IN_CONTEXT", "5")),
+            "warmup_on_init": get_env("WARMUP_ON_INIT", "false").lower() == "true",
+        }
+        
+        # Apply overrides
+        config_dict.update(overrides)
+        
+        return cls(**config_dict)
