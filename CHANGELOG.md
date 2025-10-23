@@ -173,6 +173,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New features are optional enhancements
   - No breaking changes
 
+### Fixed
+- **Query History display** - Shows natural response instead of SQL (consistent with conversational-first design)
+
 ### Planned
 - Streamlit demo UI for testing
 - Safety guardrails for input/output validation

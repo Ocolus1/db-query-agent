@@ -548,10 +548,14 @@ def render_query_history():
     for idx, item in enumerate(st.session_state.query_history[:10]):  # Show last 10
         with st.expander(f"**{item['question'][:50]}...** - {item['timestamp'].strftime('%H:%M:%S')}"):
             st.markdown(f"**Question:** {item['question']}")
-            st.code(item['result'].get('sql', 'N/A'), language='sql')
             
-            if 'results' in item['result'] and item['result']['results']:
-                st.markdown(f"**Rows returned:** {len(item['result']['results'])}")
+            # Show agent's natural response
+            natural_response = item['result'].get('natural_response', 'No response available')
+            st.markdown(f"**Answer:** {natural_response}")
+            
+            # Show execution time if available
+            if 'execution_time' in item['result']:
+                st.caption(f"⚡ Executed in {item['result']['execution_time']:.2f}s")
 
 
 def main():
