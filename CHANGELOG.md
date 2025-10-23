@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [0.1.3] - 2025-10-23
+
+### 🔄 Maintenance Release
+
+### Changed
+- Testing automated GitHub Actions workflow for PyPI releases
+- No functional changes from v0.1.2
+
+---
+
 ## [0.1.2] - 2025-10-23
 
 ### 🔧 Critical Bug Fix
