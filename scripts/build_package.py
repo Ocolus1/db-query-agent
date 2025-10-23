@@ -54,19 +54,18 @@ def check_dependencies():
     missing = []
     
     for package in required:
-        result = subprocess.run(
-            [sys.executable, '-m', 'pip', 'show', package],
-            capture_output=True
-        )
-        if result.returncode != 0:
+        # Try importing the package instead of using pip show
+        try:
+            __import__(package)
+            print(f"  ✅ {package} - installed")
+        except ImportError:
             missing.append(package)
             print(f"  ❌ {package} - NOT INSTALLED")
-        else:
-            print(f"  ✅ {package} - installed")
     
     if missing:
         print(f"\n❌ Missing dependencies: {', '.join(missing)}")
-        print(f"Install with: pip install {' '.join(missing)}")
+        print(f"Install with: uv pip install {' '.join(missing)}")
+        print(f"Or: pip install {' '.join(missing)}")
         return False
     
     return True
