@@ -12,6 +12,11 @@ All notable changes to this project will be documented in this file.
 - Testing automated GitHub Actions workflow for PyPI releases
 - No functional changes from v0.1.2
 
+### Fixed
+- **Test timing issue** - Fixed flaky `test_force_refresh` test in schema_extractor
+  - Added 10ms delay between schema calls to ensure different timestamps
+  - Resolves intermittent test failures on fast systems
+
 ---
 
 ## [0.1.2] - 2025-10-23

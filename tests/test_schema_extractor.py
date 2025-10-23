@@ -1,6 +1,7 @@
 """Tests for schema_extractor module."""
 
 import pytest
+import time
 from db_query_agent.schema_extractor import SchemaExtractor
 from db_query_agent.exceptions import SchemaExtractionError
 
@@ -55,6 +56,9 @@ class TestSchemaExtractor:
         # First call
         schema1 = schema_extractor.get_schema()
         timestamp1 = schema_extractor._cache_timestamp
+        
+        # Brief pause to ensure timestamp difference
+        time.sleep(0.01)
         
         # Force refresh
         schema2 = schema_extractor.get_schema(force_refresh=True)
