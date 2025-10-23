@@ -482,7 +482,7 @@ def render_query_interface():
                         await asyncio.sleep(0.03)  # 30ms delay per token
                     return streamed_text
                 
-                # Run streaming
+                # Run streaming (statistics are tracked at agent level)
                 final_response = asyncio.run(stream_response())
                 
                 # Clear the streaming placeholder

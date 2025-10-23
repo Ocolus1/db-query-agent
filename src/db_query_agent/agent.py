@@ -354,13 +354,34 @@ class DatabaseQueryAgent:
         """
         logger.info(f"Processing streaming query: {question}")
         
+        # Check if this will be a cache hit (for stats)
+        was_cached = False
+        if self.config.cache.enabled:
+            schema_hash = str(hash(str(self.schema_extractor.get_schema())))
+            cached = self.cache_manager.get_llm_response(question, schema_hash)
+            was_cached = cached is not None
+        
         try:
             # Use multi-agent system streaming
+            has_error = False
             async for chunk in self.multi_agent_system.query_stream(question, session=session):
                 yield chunk
+            
+            # Update statistics after streaming completes
+            if self.enable_statistics:
+                self.stats["total_queries"] += 1
+                self.stats["successful_queries"] += 1
+                if was_cached:
+                    self.stats["cache_hits"] += 1
                 
         except Exception as e:
             logger.error(f"Streaming query failed: {e}")
+            
+            # Update failure stats
+            if self.enable_statistics:
+                self.stats["total_queries"] += 1
+                self.stats["failed_queries"] += 1
+            
             yield f"I apologize, but I encountered an error: {str(e)}. Could you please rephrase your question?"
     
     def create_session(self, session_id: str) -> ChatSession:
