@@ -191,9 +191,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Streamlit UI** - Removed duplicate streaming checkbox from Advanced Options, kept only per-query toggle
 - **Streaming UX improvements**:
   - Added artificial delay (30ms per token) to slow down streaming for better readability
-  - Added "🤔 Thinking..." indicator during processing
+  - Fixed unreachable code bug after `st.rerun()` in streaming logic
+  - Real-time streaming display with placeholder that updates token-by-token
   - Disabled send button and input field while processing to prevent duplicate messages
   - Fixed streaming placeholder positioning issue
+- **Statistics tracking**:
+  - Fixed statistics not updating for streaming queries
+  - Added cache hit detection for streaming queries at agent level
+  - Statistics now properly track both regular and streaming queries
+  - Moved statistics tracking from UI level to agent level for consistency
+  - Works correctly whether using agent directly or through UI
+
+### Added (Testing)
+- **🧪 Comprehensive Test Suite for Phase 4**
+  - `test_dynamic_configuration.py` - Tests for all configuration options (30+ tests)
+  - `test_streaming.py` - Tests for streaming functionality (15+ tests)
+  - `test_utility_methods.py` - Tests for new utility methods (20+ tests)
+  - `test_phase4_integration.py` - End-to-end integration tests (15+ tests)
+  - Tests cover: configuration priority, streaming, sessions, schema, statistics, backward compatibility
+  - All tests use mocks - no external API calls required
+  - Fast execution (< 30 seconds for full suite)
+  - **Fixed test compatibility issues**:
+    - Updated ChatSession tests to match new implementation (uses `agent` instead of `agent_integration`)
+    - Fixed async mock issues in integration tests
+    - Corrected assertion logic for optional fields
+    - Fixed credential validation test to use `from_env()` method
+    - Fixed environment variable name in config priority test (CACHE_ENABLED not ENABLE_CACHE)
+    - All 133 tests now passing ✅
 
 ### Planned
 - Streamlit demo UI for testing

@@ -93,32 +93,31 @@ class TestChatSession:
     """Test ChatSession class."""
     
     @pytest.fixture
-    def mock_agent_integration(self):
-        """Create mock agent integration."""
+    def mock_agent(self):
+        """Create mock agent."""
         from unittest.mock import Mock, AsyncMock
-        from db_query_agent.agent_integration import QueryResponse
         
         mock = Mock()
-        mock.generate_sql = AsyncMock(
-            return_value=QueryResponse(
-                sql="SELECT * FROM users",
-                explanation="Retrieves all users",
-                confidence=0.95
-            )
-        )
+        # Mock the query method to return async
+        async def mock_query(question, session=None):
+            return {
+                "natural_response": "Test response",
+                "final_output": "Test response"
+            }
+        mock.query = mock_query
         return mock
     
     @pytest.fixture
-    def chat_session(self, mock_agent_integration):
+    def chat_session(self, mock_agent):
         """Create chat session for testing."""
         manager = SessionManager()
         session = manager.create_session("test_chat")
-        return ChatSession("test_chat", mock_agent_integration, session)
+        return ChatSession("test_chat", mock_agent, session)
     
-    def test_initialization(self, chat_session, mock_agent_integration):
+    def test_initialization(self, chat_session, mock_agent):
         """Test chat session initialization."""
         assert chat_session.session_id == "test_chat"
-        assert chat_session.agent_integration == mock_agent_integration
+        assert chat_session.agent == mock_agent
         assert chat_session.session is not None
     
     @pytest.mark.asyncio
@@ -126,9 +125,8 @@ class TestChatSession:
         """Test asking a question."""
         response = await chat_session.ask("show all users")
         
-        assert response["sql"] == "SELECT * FROM users"
-        assert response["explanation"] == "Retrieves all users"
-        assert response["confidence"] == 0.95
+        assert "natural_response" in response
+        assert response["natural_response"] == "Test response"
     
     @pytest.mark.asyncio
     async def test_clear(self, chat_session):
