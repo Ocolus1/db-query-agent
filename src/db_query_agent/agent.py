@@ -330,23 +330,34 @@ class DatabaseQueryAgent:
                 "execution_time": time.time() - start_time
             }
     
-    async def query_stream(self, question: str) -> AsyncIterator[str]:
+    async def query_stream(
+        self,
+        question: str,
+        session: Optional[Any] = None
+    ) -> AsyncIterator[str]:
         """
-        Query database with streaming response.
+        Query database with streaming response (token-by-token).
         
-        Note: Streaming is not currently supported in multi-agent mode.
-        This method will be implemented in a future update.
+        This provides a better user experience by showing responses as they're generated,
+        reducing perceived wait time.
         
         Args:
             question: Natural language question
+            session: Optional session for conversation history
             
         Yields:
             Response tokens as they are generated
         """
-        logger.warning("Streaming is not yet supported in multi-agent mode")
-        # For now, fall back to regular query and yield the complete response
-        result = await self.query(question)
-        yield result.get("natural_response", str(result.get("final_output", "")))
+        logger.info(f"Processing streaming query: {question}")
+        
+        try:
+            # Use multi-agent system streaming
+            async for chunk in self.multi_agent_system.query_stream(question, session=session):
+                yield chunk
+                
+        except Exception as e:
+            logger.error(f"Streaming query failed: {e}")
+            yield f"I apologize, but I encountered an error: {str(e)}. Could you please rephrase your question?"
     
     def create_session(self, session_id: str) -> ChatSession:
         """

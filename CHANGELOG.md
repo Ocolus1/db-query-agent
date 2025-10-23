@@ -173,6 +173,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New features are optional enhancements
   - No breaking changes
 
+### Added (Streaming Support) ⚡
+- **🌊 Token-by-Token Streaming** - Real-time response streaming using OpenAI Agents SDK
+  - Implemented `query_stream()` method in multi-agent system
+  - Uses `Runner.run_streamed()` with `ResponseTextDeltaEvent`
+  - Reduces perceived wait time - users see responses as they're generated
+  - Fully integrated with caching (cached responses returned instantly)
+  - Works with sessions for conversational context
+  - Example: `async for chunk in agent.query_stream("question"): print(chunk, end="")`
+
 ### Fixed
 - **Query History display** - Shows natural response instead of SQL (consistent with conversational-first design)
 

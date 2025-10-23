@@ -1,8 +1,9 @@
 """Simple Multi-Agent System - Fast, conversational-first architecture."""
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, AsyncIterator
 from agents import Agent, Runner
+from openai.types.responses import ResponseTextDeltaEvent
 from db_query_agent.agents.simple_sql_agent import SimpleSQLAgent
 from db_query_agent.agents.simple_conversational_agent import SimpleConversationalAgent
 from db_query_agent.agent_integration import DatabaseContext
@@ -120,6 +121,68 @@ class SimpleMultiAgentSystem:
                 "final_output": f"I apologize, but I encountered an error: {str(e)}. Could you please rephrase your question?",
                 "natural_response": f"I apologize, but I encountered an error: {str(e)}. Could you please rephrase your question?"
             }
+    
+    async def query_stream(
+        self,
+        question: str,
+        session: Optional[Any] = None
+    ) -> AsyncIterator[str]:
+        """
+        Process a query with streaming response (token-by-token).
+        
+        Args:
+            question: User's natural language question
+            session: Optional session for conversation history
+            
+        Yields:
+            Text chunks as they are generated
+        """
+        logger.info(f"Processing streaming query: {question}")
+        
+        try:
+            # Check cache first (if enabled)
+            if self.cache_enabled and self.cache_manager:
+                schema_hash = str(hash(str(self.db_context.schema_extractor.get_schema())))
+                cached = self.cache_manager.get_llm_response(question, schema_hash)
+                if cached:
+                    logger.info("Returning cached response (streaming)")
+                    # Yield cached response all at once
+                    yield cached.get("natural_response", str(cached.get("final_output", "")))
+                    return
+            
+            # Run conversational agent with streaming
+            result = Runner.run_streamed(
+                self.conversational_agent,
+                input=question,
+                context=self.db_context,
+                session=session
+            )
+            
+            # Stream text deltas as they arrive
+            full_response = ""
+            async for event in result.stream_events():
+                # Only stream raw text deltas (token-by-token)
+                if event.type == "raw_response_event" and isinstance(event.data, ResponseTextDeltaEvent):
+                    delta = event.data.delta
+                    full_response += delta
+                    yield delta
+            
+            # Cache the complete response (if enabled)
+            if self.cache_enabled and self.cache_manager and full_response:
+                response = {
+                    "question": question,
+                    "final_output": full_response,
+                    "natural_response": full_response,
+                    "agent_used": "Conversational Agent",
+                }
+                self.cache_manager.set_llm_response(question, schema_hash, response)
+            
+            logger.info(f"Streaming query completed successfully")
+            
+        except Exception as e:
+            logger.error(f"Streaming query failed: {e}")
+            error_msg = f"I apologize, but I encountered an error: {str(e)}. Could you please rephrase your question?"
+            yield error_msg
     
     def get_agents(self) -> Dict[str, Agent[DatabaseContext]]:
         """
