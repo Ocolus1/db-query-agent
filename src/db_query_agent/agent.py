@@ -9,9 +9,9 @@ from db_query_agent.schema_extractor import SchemaExtractor
 from db_query_agent.cache_manager import CacheManager
 from db_query_agent.connection_manager import ConnectionManager
 from db_query_agent.query_validator import QueryValidator
-from db_query_agent.agent_integration import AgentIntegration, DatabaseContext
+from db_query_agent.agent_integration import DatabaseContext
 from db_query_agent.session_manager import SessionManager, ChatSession
-from db_query_agent.conversational_layer import ConversationalLayer
+from db_query_agent.simple_multi_agent_system import SimpleMultiAgentSystem
 from db_query_agent.exceptions import DatabaseQueryAgentError
 
 logger = logging.getLogger(__name__)
@@ -123,6 +123,14 @@ class DatabaseQueryAgent:
             warmup_on_init=warmup_on_init
         )
         
+        # Initialize query statistics
+        self.stats = {
+            "total_queries": 0,
+            "successful_queries": 0,
+            "failed_queries": 0,
+            "cache_hits": 0,
+        }
+        
         # Initialize components
         self._initialize_components()
         
@@ -169,20 +177,21 @@ class DatabaseQueryAgent:
             safety_config=self.config.safety
         )
         
-        # Agent integration
-        self.agent_integration = AgentIntegration(
-            context=self.db_context,
-            model_config=self.config.model,
-            openai_api_key=self.config.openai_api_key
-        )
-        
         # Session manager
         self.session_manager = SessionManager(
             backend=self.config.cache.backend
         )
         
-        # Conversational layer
-        self.conversational_layer = ConversationalLayer()
+        # Initialize multi-agent system (only system available)
+        logger.info("Initializing multi-agent system (optimized for speed)...")
+        self.multi_agent_system = SimpleMultiAgentSystem(
+            database_context=self.db_context,
+            model_config=self.config.model,
+            openai_api_key=self.config.openai_api_key,
+            cache_manager=self.cache_manager,
+            cache_enabled=self.config.cache.enabled
+        )
+        logger.info("Multi-agent system initialized (1 LLM call per query)")
     
     def _warmup(self) -> None:
         """Warm up cache and connections."""
@@ -223,71 +232,35 @@ class DatabaseQueryAgent:
         logger.info(f"Processing query: {question}")
         
         try:
-            # Check if it's casual conversation first
-            casual_response = self.conversational_layer.handle_casual_conversation(question)
-            if casual_response:
-                logger.info("Handling as casual conversation")
-                return {
-                    "question": question,
-                    "natural_response": casual_response,
-                    "is_casual": True,
-                    "execution_time": time.time() - start_time
-                }
+            # Use multi-agent system (only system available)
+            logger.info("Using multi-agent system (conversational-first)")
             
-            # Check cache
+            # Check if this will be a cache hit (for stats)
+            was_cached = False
             if self.config.cache.enabled:
                 schema_hash = str(hash(str(self.schema_extractor.get_schema())))
                 cached = self.cache_manager.get_llm_response(question, schema_hash)
-                if cached:
-                    logger.info("Returning cached response")
-                    return cached
+                was_cached = cached is not None
             
-            # Generate SQL with optional session for memory
-            response = await self.agent_integration.generate_sql(
-                question,
-                max_tables=self.config.max_tables_in_context,
-                session=session
-            )
+            result = await self.multi_agent_system.query(question, session=session)
+            result["execution_time"] = time.time() - start_time
             
-            result = {
-                "question": question,
-                "sql": response.sql if return_sql else None,
-                "explanation": response.explanation,
-                "confidence": response.confidence,
-                "needs_clarification": response.needs_clarification,
-                "clarification_question": response.clarification_question,
-                "execution_time": time.time() - start_time
-            }
+            # Update statistics
+            if not result.get('is_casual', False):
+                self.stats["total_queries"] += 1
+                if was_cached:
+                    self.stats["cache_hits"] += 1
+                if result.get('error'):
+                    self.stats["failed_queries"] += 1
+                else:
+                    self.stats["successful_queries"] += 1
             
-            # Execute query if requested
-            if return_results and not response.needs_clarification:
-                try:
-                    results = await self.connection_manager.execute_query_async(
-                        response.sql,
-                        timeout=self.config.safety.max_query_timeout
-                    )
-                    result["results"] = results
-                    result["row_count"] = len(results)
-                    
-                    # Generate natural response using conversational layer
-                    if return_natural_response:
-                        result["natural_response"] = self.conversational_layer.generate_natural_response(
-                            question, result
-                        )
-                except Exception as e:
-                    logger.error(f"Query execution failed: {e}")
-                    result["error"] = str(e)
-                    result["results"] = None
-            
-            # Cache response
-            if self.config.cache.enabled:
-                self.cache_manager.set_llm_response(question, schema_hash, result)
-            
-            logger.info(f"Query completed in {result['execution_time']:.2f}s")
             return result
             
         except Exception as e:
             logger.error(f"Query failed: {e}")
+            # Update failure stats
+            self.stats["failed_queries"] += 1
             return {
                 "question": question,
                 "error": str(e),
@@ -298,19 +271,19 @@ class DatabaseQueryAgent:
         """
         Query database with streaming response.
         
+        Note: Streaming is not currently supported in multi-agent mode.
+        This method will be implemented in a future update.
+        
         Args:
             question: Natural language question
             
         Yields:
             Response tokens as they are generated
         """
-        logger.info(f"Processing query (streaming): {question}")
-        
-        async for token in self.agent_integration.generate_sql_stream(
-            question,
-            max_tables=self.config.max_tables_in_context
-        ):
-            yield token
+        logger.warning("Streaming is not yet supported in multi-agent mode")
+        # For now, fall back to regular query and yield the complete response
+        result = await self.query(question)
+        yield result.get("natural_response", str(result.get("final_output", "")))
     
     def create_session(self, session_id: str) -> ChatSession:
         """
@@ -332,6 +305,7 @@ class DatabaseQueryAgent:
     def get_stats(self) -> Dict[str, Any]:
         """Get agent statistics."""
         return {
+            **self.stats,  # Include query statistics
             "cache": self.cache_manager.get_stats(),
             "pool": self.connection_manager.get_pool_status(),
             "sessions": self.session_manager.get_stats(),
