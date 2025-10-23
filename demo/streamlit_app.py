@@ -3,6 +3,7 @@
 import streamlit as st
 import pandas as pd
 import asyncio
+import time
 from datetime import datetime
 from typing import Optional
 import logging
@@ -148,6 +149,8 @@ def init_session_state():
         st.session_state.use_session = False
     if 'use_streaming' not in st.session_state:
         st.session_state.use_streaming = False
+    if 'is_processing' not in st.session_state:
+        st.session_state.is_processing = False
 
 
 def connect_to_database(**kwargs) -> bool:
@@ -218,7 +221,6 @@ def sidebar_config():
         with st.expander("Advanced Options"):
             read_only = st.checkbox("Read-Only Mode", value=True, help="Only allow SELECT queries")
             enable_cache = st.checkbox("Enable Caching", value=True)
-            enable_streaming = st.checkbox("Enable Streaming", value=False, help="Stream responses token-by-token for better UX")
             model_strategy = st.selectbox(
                 "Model Strategy",
                 ["adaptive", "fixed"],
@@ -234,7 +236,6 @@ def sidebar_config():
                     success = connect_to_database(
                         read_only=read_only,
                         enable_cache=enable_cache,
-                        enable_streaming=enable_streaming,
                         model_strategy=model_strategy
                     )
                     if success:
@@ -324,9 +325,19 @@ def render_schema_browser():
 # No need to duplicate logic here!
 
 
-def render_chat_message(message: dict, index: int):
+def render_chat_message(message: dict, idx: int):
     """Render a single chat message bubble."""
-    if message['type'] == 'user':
+    if message['type'] == 'thinking':
+        # Show thinking indicator
+        st.markdown(
+            '<div style="text-align: left; margin: 10px 0;">'
+            '<span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); '
+            'color: white; padding: 12px 20px; border-radius: 20px; display: inline-block; '
+            'font-size: 14px;">🤔 Thinking...</span>'
+            '</div>',
+            unsafe_allow_html=True
+        )
+    elif message['type'] == 'user':
         # User message bubble
         st.markdown(f"""
         <div class="user-message">
@@ -411,13 +422,22 @@ def render_query_interface():
             "Type your question...",
             placeholder="e.g., How many users do we have?",
             label_visibility="collapsed",
-            key="query_input"
+            key="query_input",
+            disabled=st.session_state.is_processing
         )
     with col2:
-        send_button = st.button("📤 Send", type="primary", width="stretch")
+        send_button = st.button(
+            "📤 Send", 
+            type="primary", 
+            width="stretch",
+            disabled=st.session_state.is_processing or not query
+        )
     
     # Handle query submission
     if send_button and query:
+        # Set processing state
+        st.session_state.is_processing = True
+        
         # Add user message
         st.session_state.chat_messages.append({
             'type': 'user',
@@ -438,22 +458,35 @@ def render_query_interface():
             
             # Use streaming if user toggled it on
             if st.session_state.use_streaming:
-                # Create placeholder for streaming response
-                response_placeholder = st.empty()
+                # Create a placeholder for streaming text in the chat area
+                streaming_placeholder = st.empty()
+                
+                # Stream the response with real-time display
                 streamed_text = ""
                 
-                # Stream the response
                 async def stream_response():
                     nonlocal streamed_text
                     async for chunk in st.session_state.agent.query_stream(query, session=session_obj):
                         streamed_text += chunk
-                        # Update placeholder with accumulated text
-                        response_placeholder.markdown(f"💬 {streamed_text}")
+                        # Display accumulated text in real-time
+                        streaming_placeholder.markdown(
+                            f'<div style="text-align: left; margin: 10px 0;">'
+                            f'<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); '
+                            f'color: white; padding: 15px 20px; border-radius: 20px; display: inline-block; '
+                            f'max-width: 70%; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">'
+                            f'{streamed_text}'
+                            f'</div></div>',
+                            unsafe_allow_html=True
+                        )
+                        # Add artificial delay to slow down streaming (adjust as needed)
+                        await asyncio.sleep(0.03)  # 30ms delay per token
                     return streamed_text
                 
                 # Run streaming
                 final_response = asyncio.run(stream_response())
-                response_placeholder.empty()  # Clear placeholder
+                
+                # Clear the streaming placeholder
+                streaming_placeholder.empty()
                 
                 # Create result dict
                 result = {
@@ -480,17 +513,22 @@ def render_query_interface():
                     'result': result
                 })
                 
+            # Reset processing state
+            st.session_state.is_processing = False
+            
             # Rerun to show new messages
             st.rerun()
             
         except Exception as e:
+            st.session_state.is_processing = False
             st.error(f"❌ Error: {str(e)}")
             logger.error(f"Query error: {e}", exc_info=True)
     
     # Clear chat button
     if len(st.session_state.chat_messages) > 0:
-        if st.button("🗑️ Clear Chat"):
+        if st.button("🗑️ Clear Chat", disabled=st.session_state.is_processing):
             st.session_state.chat_messages = []
+            st.session_state.is_processing = False
             st.rerun()
 
 

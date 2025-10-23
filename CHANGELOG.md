@@ -188,6 +188,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Query History display** - Shows natural response instead of SQL (consistent with conversational-first design)
+- **Streamlit UI** - Removed duplicate streaming checkbox from Advanced Options, kept only per-query toggle
+- **Streaming UX improvements**:
+  - Added artificial delay (30ms per token) to slow down streaming for better readability
+  - Added "🤔 Thinking..." indicator during processing
+  - Disabled send button and input field while processing to prevent duplicate messages
+  - Fixed streaming placeholder positioning issue
 
 ### Planned
 - Streamlit demo UI for testing
