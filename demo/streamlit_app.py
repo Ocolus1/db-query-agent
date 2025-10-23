@@ -369,64 +369,6 @@ def render_chat_message(message: dict, index: int):
                 badge_text = f"⚠ {confidence:.0%} confident"
             
             st.markdown(f'<span class="confidence-badge {badge_class}">{badge_text}</span>', unsafe_allow_html=True)
-        
-        # Collapsible details button
-        with st.expander("📊 View Details", expanded=False):
-            # SQL Query
-            st.markdown("**🔍 Generated SQL:**")
-            st.code(result.get('sql', 'N/A'), language='sql')
-            
-            # Explanation
-            if 'explanation' in result:
-                st.markdown("**💡 Explanation:**")
-                st.info(result['explanation'])
-            
-            # Results data
-            if 'results' in result and result['results']:
-                st.markdown("**📋 Data:**")
-                results_data = result['results']
-                
-                if results_data:
-                    # Convert to DataFrame
-                    if hasattr(results_data[0], '_fields'):
-                        columns = results_data[0]._fields
-                    else:
-                        columns = [f"col_{i}" for i in range(len(results_data[0]))]
-                    
-                    df = pd.DataFrame(results_data, columns=columns)
-                    st.dataframe(df, width="stretch")
-                    
-                    # Download button
-                    csv = df.to_csv(index=False)
-                    st.download_button(
-                        label="📥 Download CSV",
-                        data=csv,
-                        file_name=f"query_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                        mime="text/csv",
-                        key=f"download_{index}"
-                    )
-                    
-                    # Visualization
-                    if len(df) > 0 and len(df.columns) > 0:
-                        numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
-                        
-                        if numeric_cols:
-                            st.markdown("**📈 Visualize:**")
-                            chart_type = st.selectbox("Chart Type", ["Bar Chart", "Line Chart", "Area Chart"], key=f"chart_{index}")
-                            y_col = st.selectbox("Y-axis", numeric_cols, key=f"y_{index}")
-                            x_col = st.selectbox("X-axis (optional)", ["Index"] + df.columns.tolist(), key=f"x_{index}")
-                            
-                            if x_col == "Index":
-                                chart_data = df[[y_col]]
-                            else:
-                                chart_data = df.set_index(x_col)[[y_col]]
-                            
-                            if chart_type == "Bar Chart":
-                                st.bar_chart(chart_data)
-                            elif chart_type == "Line Chart":
-                                st.line_chart(chart_data)
-                            elif chart_type == "Area Chart":
-                                st.area_chart(chart_data)
 
 
 def render_query_interface():
